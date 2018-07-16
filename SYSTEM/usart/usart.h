@@ -23,7 +23,9 @@
 extern uint8_t USART_RX_BUF[64];     //接收缓冲,最大63个字节.末字节为换行符 
 extern uint8_t USART_RX_STA;         //接收状态标记	
 
-void uart_init(uint32_t bound);
+int fputc(int ch, FILE *f);
+void uart1_init(u32 bound);
+void uart2_init(u32 bound);
 extern int16_t YAW,PITCH,ROLL;
 extern uint8_t flag;
 #endif

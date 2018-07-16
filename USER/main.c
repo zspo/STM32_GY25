@@ -7,7 +7,8 @@
 //ALIENTEK Mini STM32开发板范例代码3
 //串口实验
 //技术论坛:www.openedv.com	
-	void dis_play(int16_t num,u8 n)	
+/*
+void dis_play(int16_t num,u8 n)	
 {
 	if(num<0)
 	{
@@ -25,33 +26,42 @@
 	USART_SendData(USART1,0x30|(num%10));
 	USART_SendData(USART1,',');
 }
- int main(void)
+*/
+int main(void)
  {
 	
-	u8 t;
-	u8 len;	
+//	u8 t;
+//	u8 len;	
 	static u8  times=0;  	
  	SystemInit();//系统时钟等初始化
 	delay_init(72);	     //延时初始化
 	NVIC_Configuration();//设置NVIC中断分组2:2位抢占优先级，2位响应优先级
-	uart_init(115200);//串口初始化为115200
+	uart1_init(115200);//串口初始化为115200
+	 uart2_init(115200);//串口初始化为115200
 	while(1)
 	{
+		/*
 		if(flag==0)
 		{
 		  USART_SendData(USART1,0xa5);
 			USART_SendData(USART1,0x51);//单一查询指令
 		}
 		delay_ms(10);
-//		if(times==0)
-//		{
-//			times=1;//只发一次
-//		  USART_SendData(USART1,0xa5);
-//			USART_SendData(USART1,0x52);//自动发送16进制数据指令
-//		}
+		*/
+		if(times==0)
+		{
+			times=1;//只发一次
+		  USART_SendData(USART2,0xa5);
+			USART_SendData(USART2,0x52);//自动发送16进制数据指令
+		}
 		
 		if(flag==1)
 		{	
+			 USART_SendData(USART1,'Y');
+			 USART_SendData(USART1,YAW);
+	     USART_SendData(USART1,PITCH);
+	     USART_SendData(USART1,ROLL);
+			/*
 			 flag=0;
 			 USART_SendData(USART1,'#');
 	     USART_SendData(USART1,'Y');
@@ -63,6 +73,7 @@
 			 dis_play(ROLL,0);
 			 USART_SendData(USART1,0X0d);
 	     USART_SendData(USART1,0X0a);
+			*/
 		}
 	}	 
 

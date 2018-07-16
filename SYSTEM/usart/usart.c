@@ -36,12 +36,34 @@ _sys_exit(int x)
 { 
 	x = x; 
 } 
+
+/*
 //重定义fputc函数 
 int fputc(int ch, FILE *f)
 {      
 	while((USART1->SR&0X40)==0);//循环发送,直到发送完毕   
     USART1->DR = (u8) ch;      
 	return ch;
+}
+*/
+//?????
+int USART_PRINTF_FLAG = 2;//????2
+
+//??fputc
+int fputc(int ch, FILE *f)
+{
+    if (USART_PRINTF_FLAG == 2)
+    {
+        while(USART_GetFlagStatus(USART2,USART_FLAG_TC)==RESET);
+        USART_SendData(USART2,(uint8_t)ch);
+    }
+    else
+    {
+        while(USART_GetFlagStatus(USART1,USART_FLAG_TC)==RESET);
+        USART_SendData(USART1,(uint8_t)ch);
+    }
+
+    return ch;
 }
 #endif 
 
@@ -69,7 +91,7 @@ u8 USART_RX_BUF[64];     //接收缓冲,最大64个字节.
 //bit6，接收到0x0d
 //bit5~0，接收到的有效字节数目
 u8 USART_RX_STA=0;       //接收状态标记
-
+/*
 void uart_init(u32 bound){
     //GPIO端口设置
     GPIO_InitTypeDef GPIO_InitStructure;
@@ -114,14 +136,123 @@ void uart_init(u32 bound){
     USART_Cmd(USART1, ENABLE);                    //使能串口 
     
 }
+*/
+/*******************************************************************************  
+* ? ? ?         : uart_init  
+* ????         : IO?????1,???????    A9,A10    
+* ?    ?         : ?  
+* ?    ?         : ?  
+*******************************************************************************/    
+void uart1_init(u32 bound)    
+{    
+GPIO_InitTypeDef GPIO_InitStructure;
+USART_InitTypeDef USART_InitStructure;
+NVIC_InitTypeDef NVIC_InitStructure;        
+
+RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA, ENABLE );
+RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART1, ENABLE );
+
+GPIO_InitStructure.GPIO_Pin = GPIO_Pin_9; //USART1 TX;
+GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP; //??????;
+GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+GPIO_Init(GPIOA, &GPIO_InitStructure); //??A;
+    
+GPIO_InitStructure.GPIO_Pin = GPIO_Pin_10; //USART1 RX;
+//GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING; //????;
+GPIO_Init(GPIOA, &GPIO_InitStructure); //??A;
+
+USART_InitStructure.USART_BaudRate = bound; //???;
+USART_InitStructure.USART_WordLength = USART_WordLength_8b; //???8?;
+USART_InitStructure.USART_StopBits = USART_StopBits_1; //???1?;
+USART_InitStructure.USART_Parity = USART_Parity_No ; //????;
+USART_InitStructure.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
+//?????;
+USART_InitStructure.USART_Mode = USART_Mode_Rx | USART_Mode_Tx;
+//????;
+USART_Init(USART1, &USART_InitStructure);//??????;
+
+NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2); //?????,4??????,4??????;
+
+NVIC_InitStructure.NVIC_IRQChannel = USART1_IRQn; //???;
+NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 2; //?????;
+NVIC_InitStructure.NVIC_IRQChannelSubPriority = 2; //?????;
+NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+NVIC_Init(&NVIC_InitStructure);
+
+USART_ITConfig(USART1, USART_IT_RXNE, ENABLE);
+USART_Cmd(USART1, ENABLE); //????; 
+}    
+
+/*******************************************************************************  
+* ? ? ?         : uart2_init  
+* ????         : IO?????2,???????     A2,A3   
+* ?    ?         : ?  
+* ?    ?         : ?  
+*******************************************************************************/    
+void uart2_init(u32 bound)    
+{    
+GPIO_InitTypeDef GPIO_InitStructure;
+USART_InitTypeDef USART_InitStructure;
+NVIC_InitTypeDef NVIC_InitStructure;        
+
+RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA, ENABLE );
+RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART2, ENABLE );
+
+GPIO_InitStructure.GPIO_Pin = GPIO_Pin_2; //USART2 TX;
+GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP; //??????;
+GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+GPIO_Init(GPIOA, &GPIO_InitStructure); //??A;
+    
+GPIO_InitStructure.GPIO_Pin = GPIO_Pin_3; //USART2 RX;
+//GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING; //????;
+GPIO_Init(GPIOA, &GPIO_InitStructure); //??A;
+
+USART_InitStructure.USART_BaudRate = bound; //???;
+USART_InitStructure.USART_WordLength = USART_WordLength_8b; //???8?;
+USART_InitStructure.USART_StopBits = USART_StopBits_1; //???1?;
+USART_InitStructure.USART_Parity = USART_Parity_No ; //????;
+USART_InitStructure.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
+//?????;
+USART_InitStructure.USART_Mode = USART_Mode_Rx | USART_Mode_Tx;
+//????;
+USART_Init(USART2, &USART_InitStructure);//??????;
+
+NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2); //?????,4??????,4??????;
+
+NVIC_InitStructure.NVIC_IRQChannel = USART2_IRQn; //???;
+NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0; //?????;
+NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0; //?????;
+NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+NVIC_Init(&NVIC_InitStructure);
+
+USART_ITConfig(USART2, USART_IT_RXNE, ENABLE);
+USART_Cmd(USART2, ENABLE); //????;  
+} 
+
+
+void USART1_IRQHandler(void)
+{
+    USART_PRINTF_FLAG = 1;
+    //your coding here...
+	  if(USART_GetITStatus(USART1,USART_IT_RXNE)!=Bit_RESET)//?????USART??????  
+    {    
+  			USART_SendData(USART1,'Y');
+			 USART_SendData(USART1,YAW);
+	     USART_SendData(USART1,PITCH);
+	     USART_SendData(USART1,ROLL);
+    } 
+}
+
+
 int16_t YAW=0,PITCH=0,ROLL=0;
 uint8_t flag=0;
-void USART1_IRQHandler(void)                	//串口1中断服务程序
+void USART2_IRQHandler(void)                	//串口2中断服务程序
 	{
 	static uint8_t k=0,rebuf[8]={0};
-	if(USART_GetITStatus(USART1, USART_IT_RXNE) != RESET)
+	USART_PRINTF_FLAG = 2;
+	if(USART_GetITStatus(USART2, USART_IT_RXNE) != RESET)
 		{
-		 rebuf[k++] =USART_ReceiveData(USART1);	//读取接收到的数据
+		 rebuf[k++] =USART_ReceiveData(USART2);	//读取接收到的数据
 		 if(!(rebuf[0]==0xaa))//如果帧头错误，清缓存
 		 {
 			k=0;
@@ -141,4 +272,5 @@ void USART1_IRQHandler(void)                	//串口1中断服务程序
 			 
 		
     } 
-} 
+}
+
